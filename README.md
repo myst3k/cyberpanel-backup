@@ -46,8 +46,6 @@ export WASABI_REPO_NAME=s3:<storage region url>/<bucket name>
 ```
 mkdir /opt/scripts && cd /opt/scripts  
 git clone https://github.com/myst3k/cyberpanel-backup.git
-cd cyberpanel-backup
-chmod 744 cyberpanel_backup.py start_cyberpanel_backup.sh
 ```
 add a crontab to run every day at 4am using crontab -e
 ```
