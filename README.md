@@ -52,3 +52,4 @@ add a crontab to run every day at 4am using crontab -e
 ```
 0 4 * * * /opt/scripts/cyberpanel_backup/start_cyberpanel_backup.sh
 ```
+if you want to use wasabi, append --wasabi at the end of the cron
