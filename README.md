@@ -8,8 +8,8 @@ dual backups to Backblaze B2 and Wasabi.
 ## About
 
 What this script does it go through the database of virtual hosts on cyberpanel, and if there is a virtualhost and a
-mysql table associated with it it will do a mysqldump to /home/<vhost>/database.sql, then create an encrypted restic
-repository on your storage provider, then take a snapshop of the /home/vhost directory excluding the log, backup, and
+mysql table associated, it will do a mysqldump to /home/< vhost >/database.sql, then create an encrypted restic
+repository on your storage provider, then take a snapshop of the /home/< vhost > directory excluding the log, backup, and
 lscache directory. These excludes can be edited in the restic-excludes file. I have also excluded some wordpress plugin
 backup files if the end user is doing backups on their own.
 
