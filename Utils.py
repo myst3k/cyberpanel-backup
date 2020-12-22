@@ -30,6 +30,6 @@ class Utils:
             if db_name:
                 website_list.append((website_id, website_name, str(db_name[0])))
             else:
-                website_list.append((website_id, website_name, None))
+                continue
             cursor.close()
         return website_list

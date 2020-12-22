@@ -9,14 +9,15 @@ from subprocess import run, CalledProcessError
 from typing import Optional
 
 from Utils import Utils
+from StorageProvider import StorageProvider
 
 
 class Backup:
-    def __init__(self, vhost: str, db_name: Optional[str] = None, skip_init: Optional[bool] = False):
-        self.log = logging.getLogger("b2_backup.Backup")
+    def __init__(self, vhost: str, storageProvider: StorageProvider, db_name: Optional[str] = None, skip_init: Optional[bool] = False):
+        self.log = logging.getLogger("cyberpanel_backup.Backup")
         self.vhost = vhost
         self.backup_path = Path("/home", vhost)
-        self.__init_b2_url()
+        self.__init_repository_url()
         self.incremental_config_dir = Path("/home/cyberpanel/incremental_config")
         self.restic_excludes_file = "/opt/scripts/restic-excludes"
         self.restic_retention_options = "--prune --keep-daily 30 --keep-weekly 5 --keep-monthly 12 --keep-yearly 1"
@@ -35,7 +36,7 @@ class Backup:
         self.backup_db()
         self.backup_files()
 
-    def __init_b2_url(self):
+    def __init_repository_url(self):
         if os.getenv("B2_REPO_NAME") is not None:
             b2_repo_name = os.getenv("B2_REPO_NAME")
             self.b2_path = f"{b2_repo_name}:{self.vhost}"
@@ -120,9 +121,31 @@ class Backup:
             self.log.error(e)
             # TODO: add moar error handling
 
+    def cache_cleanup(self):
+        self.log.info("Running Cache Cleanup...")
+        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} cache --cleanup"
+        cmd_split = shlex.split(cmd)
+        try:
+            run(cmd_split, check=True)
+        except CalledProcessError as e:
+            self.log.error("Error Cache Cleanup...")
+            self.log.error(e)
+            # TODO: add moar error handling
+
     def cleanup(self):
         self.log.info("Running Cleanup...")
         if self.vhost is not None:
             if self.db_backup_path.exists() and self.db_backup_path.is_dir():
                 self.log.info(f"Cleaning up database backup: {self.db_backup_path}")
                 shutil.rmtree(self.db_backup_path)
+
+    def unlock(self):
+        self.log.info("Running Unlock...")
+        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} unlock"
+        cmd_split = shlex.split(cmd)
+        try:
+            run(cmd_split, check=True)
+        except CalledProcessError as e:
+            self.log.error("Error unlock...")
+            self.log.error(e)
+            # TODO: add moar error handling

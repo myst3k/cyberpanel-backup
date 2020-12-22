@@ -2,3 +2,5 @@
 /home/**/backup
 /home/**/logs
 /home/**/.wp-cli
+/home/**/public_html/wp-content/ai1wm-backups/*.wpress
+/home/**/public_html/wp-content/updraft
