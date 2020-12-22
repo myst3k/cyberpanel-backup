@@ -13,9 +13,11 @@ from StorageProvider import StorageProvider
 
 
 class Backup:
-    def __init__(self, vhost: str, storageProvider: StorageProvider, db_name: Optional[str] = None, skip_init: Optional[bool] = False):
+    def __init__(self, vhost: str, storage_provider: StorageProvider, db_name: Optional[str] = None,
+                 skip_init: Optional[bool] = False):
         self.log = logging.getLogger("cyberpanel_backup.Backup")
         self.vhost = vhost
+        self.storage_provider = storage_provider
         self.backup_path = Path("/home", vhost)
         self.__init_repository_url()
         self.incremental_config_dir = Path("/home/cyberpanel/incremental_config")
@@ -37,12 +39,20 @@ class Backup:
         self.backup_files()
 
     def __init_repository_url(self):
-        if os.getenv("B2_REPO_NAME") is not None:
-            b2_repo_name = os.getenv("B2_REPO_NAME")
-            self.b2_path = f"{b2_repo_name}:{self.vhost}"
-        else:
-            self.log.error("Please set env variable B2_REPO_NAME with restic b2 url and bucket e.g. b2:<bucket_name>")
-            sys.exit(1)
+        if self.storage_provider == StorageProvider.B2:
+            if os.getenv("B2_REPO_NAME") is not None:
+                repo_name = os.getenv("B2_REPO_NAME")
+                self.repo_path = f"{repo_name}:{self.vhost}"
+            else:
+                self.log.error("Please configure a Backblase B2 Environment File")
+                sys.exit(1)
+        elif self.storage_provider == StorageProvider.WASABI:
+            if os.getenv("WASABI_REPO_NAME") is not None:
+                repo_name = os.getenv("WASABI_REPO_NAME")
+                self.repo_path = f"{repo_name}/{self.vhost}"
+            else:
+                self.log.error("Please configure a Wasabi Environment File")
+                sys.exit(1)
 
     def __init_config_dir(self):
         if not self.incremental_config_dir.exists():
@@ -58,13 +68,13 @@ class Backup:
             fd.close()
 
     def __init_repo(self):
-        cmd = f"/usr/bin/restic -q --repo {self.b2_path} --password-file {self.repo_passwd_file} cat config"
+        cmd = f"/usr/bin/restic -q --repo {self.repo_path} --password-file {self.repo_passwd_file} cat config"
         cmd_split = shlex.split(cmd)
         try:
             run(cmd_split, check=True, stdout=subprocess.DEVNULL)
         except CalledProcessError:
             self.log.warning("Repository Not Found or Does Not Exist, attempting to create repository...")
-            cmd = f"/usr/bin/restic -q --repo {self.b2_path} --password-file {self.repo_passwd_file} init"
+            cmd = f"/usr/bin/restic -q --repo {self.repo_path} --password-file {self.repo_passwd_file} init"
             cmd_split = shlex.split(cmd)
             try:
                 run(cmd_split, check=True)
@@ -89,7 +99,7 @@ class Backup:
 
     def backup_files(self):
         cmd = "/usr/bin/restic --repo %s --password-file %s backup %s --exclude-file=%s" % (
-            self.b2_path, self.repo_passwd_file, self.backup_path, self.restic_excludes_file)
+            self.repo_path, self.repo_passwd_file, self.backup_path, self.restic_excludes_file)
         cmd_split = shlex.split(cmd)
         try:
             self.log.info(f"Backing up files: {self.backup_path}")
@@ -101,7 +111,7 @@ class Backup:
 
     def policies(self):
         self.log.info("Running Repo Retention Policies...")
-        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} forget {self.restic_retention_options} "
+        cmd = f"/usr/bin/restic --repo {self.repo_path} --password-file {self.repo_passwd_file} forget {self.restic_retention_options} "
         cmd_split = shlex.split(cmd)
         try:
             run(cmd_split, check=True)
@@ -112,7 +122,7 @@ class Backup:
 
     def check(self):
         self.log.info("Running Repo Check...")
-        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} check"
+        cmd = f"/usr/bin/restic --repo {self.repo_path} --password-file {self.repo_passwd_file} check"
         cmd_split = shlex.split(cmd)
         try:
             run(cmd_split, check=True)
@@ -123,7 +133,7 @@ class Backup:
 
     def cache_cleanup(self):
         self.log.info("Running Cache Cleanup...")
-        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} cache --cleanup"
+        cmd = f"/usr/bin/restic --repo {self.repo_path} --password-file {self.repo_passwd_file} cache --cleanup"
         cmd_split = shlex.split(cmd)
         try:
             run(cmd_split, check=True)
@@ -141,7 +151,7 @@ class Backup:
 
     def unlock(self):
         self.log.info("Running Unlock...")
-        cmd = f"/usr/bin/restic --repo {self.b2_path} --password-file {self.repo_passwd_file} unlock"
+        cmd = f"/usr/bin/restic --repo {self.repo_path} --password-file {self.repo_passwd_file} unlock"
         cmd_split = shlex.split(cmd)
         try:
             run(cmd_split, check=True)

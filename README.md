@@ -8,13 +8,18 @@ cron job, so I was a little untrusting of it. Have been running this ever since.
 Make sure the root user has a ~/.my.cnf file configured with a database username/password which can access the sites.
 
 For Backblaze B2, create an env file: /etc/cyberpanel/.b2_env
-export B2_ACCOUNT_ID=<account id>
+`export B2_ACCOUNT_ID=<account id>
 export B2_ACCOUNT_KEY=<account key>
-export B2_REPO_NAME=b2:<bucket-name>
+export B2_REPO_NAME=b2:<bucket-name>`
 
 For Wasabi, create an env file: /etc/cyberpanel/.wasabi_env
-export WASABI_ACCESS_KEY=<access key>
+`export WASABI_ACCESS_KEY=<access key>
 export WASABI_SECRET_KEY=<secret key>
-export WASABI_REPO_NAME=s3:https://s3.wasabisys.com/<bucket name>
+export WASABI_REPO_NAME=s3:https://<storage region url>/<bucket name>`
+
+
 
 ## Usage
+
+mkdir /opt/scripts
+git clone 
