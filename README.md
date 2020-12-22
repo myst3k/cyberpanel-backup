@@ -17,7 +17,8 @@ backup files if the end user is doing backups on their own.
 
 Make sure the root user has a ~/.my.cnf file configured with a database username/password which can access the sites.
 
-sudo -i edit ~/.my.cnf with these contents, replacing your root password, can be found in /etc/cyberpanel/mysqlPassword
+become root (sudo -i)  
+edit ~/.my.cnf with these contents, replacing your root password, can be found in /etc/cyberpanel/mysqlPassword
 
 ```
 [client]
